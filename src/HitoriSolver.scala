@@ -24,9 +24,16 @@ object HitoriSolver
       
       val p = new Puzzle(lines);
       p.fillPuzzle(lines);
-      //println(p.getSquareList().foreach(_.v) + "v");
-      //println(p.getSquareList()(3).v);
-
+      
+      for(i <- 0 to p.SIZE-1)
+      {
+        for(j <- 0 to p.SIZE-1)
+        {
+          print(p.getSquareList()(i+j).v + " ");
+        }
+        print("\n");
+      }
+			
       // Solve puzzle and output to file, like so:
       var outputFile = new PrintWriter( new File(outputPath) , "UTF-8");
 
@@ -43,21 +50,19 @@ object HitoriSolver
   class Puzzle(lines:Array[String])
   {
     var allSquares = List[Square]();
+    val SIZE = lines.length;
     def fillPuzzle(lines:Array[String]) =
     {
       var i = 0;
       while(i < lines.length)
       {
         val n = lines(i).mkString.split(" ");
-        println("Before: " + lines(i) + "\nAfter:");
         var j = 0;
         while(j < n.length)
         {
-          val n2 = n(j).replace(" ", "");
-          val n3 = n2.replace("\n", "");
-          println(n3);
-          //val nToInt = n.map(_.toInt);
-          val s = new Square(j, i, n(j));
+          val c = n(j).toCharArray();
+          val c2 = c(0).toString().toInt;
+          val s = new Square(j, i, c2);
           allSquares = allSquares :+ s;
           j += 1;
         }
@@ -71,13 +76,27 @@ object HitoriSolver
     }
   }
   
+  class PuzzleSolver()
+  {
+    def oneCheck(l:List[Square]) =
+    {
+      
+    }
+  }
   
-  class Square(xPos:Int, yPos:Int, value:String, possibleColors:List[Char] = List[Char]('B', 'W'), solved:Boolean = false)
+  
+  class Square(xPos:Int, yPos:Int, value:Int, possibleColors:List[Char] = List[Char]('B', 'W'), solved:Boolean = false)
   {
     val x = xPos;
     val y = yPos;
     val v = value;
     var s = solved;
-    var left = possibleColors;
+    var pc = possibleColors;
+    
+    def getPossibleColors():List[Char] = pc;
+    def setPossibleColors(l:List[Char]) = { this.pc = l; }
+    
+    def getSolved():Boolean = s;
+    def setSolved(b:Boolean) = { this.s = b; }
   }
 }
