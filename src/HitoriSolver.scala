@@ -23,8 +23,9 @@ object HitoriSolver
       
       val p = new Puzzle(lines);
       p.fillPuzzle(lines);
-      println(p.getSquareList().foreach(_.v));
-      println(p.getSquareList()(3).v);
+      //println(p.getSquareList().foreach(_.v));
+      //println(p.getSquareList()(3).v);
+      p.getSquareList().foreach(println)
 
       // Solve puzzle and output to file, like so:
       var outputFile = new PrintWriter( new File(outputPath) , "UTF-8");
@@ -48,12 +49,12 @@ object HitoriSolver
       val nToInt = n.map(_.toInt);
 
       nToInt: Array[Int];
-      nToInt.foreach(println);
+      //Int.foreach(println);
 
       var i = 0;
       while(i < n.length)
       {
-        val s = new Square(1, 1, n(i));
+        val s = new Square(1, 1, nToInt(i));
         allSquares = allSquares :+ s;
         i += 1;
       }
@@ -66,7 +67,7 @@ object HitoriSolver
   }
   
   
-  class Square(xPos:Int, yPos:Int, value:String, possibleColors:List[Char] = List[Char]('B', 'W'), solved:Boolean = false)
+  class Square(xPos:Int, yPos:Int, value:Int, possibleColors:List[Char] = List[Char]('B', 'W'), solved:Boolean = false)
   {
     val x = xPos;
     val y = yPos;
