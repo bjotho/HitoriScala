@@ -45,7 +45,11 @@ object HitoriSolver
     def fillPuzzle(lines:Array[String]) =
     {
       val n = lines.mkString.split(" ");
-      //n.foreach(println);
+      val nToInt = n.map(_.toInt);
+
+      nToInt: Array[Int];
+      nToInt.foreach(println);
+
       var i = 0;
       while(i < n.length)
       {
