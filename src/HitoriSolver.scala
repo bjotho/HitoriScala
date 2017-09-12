@@ -124,9 +124,9 @@ object HitoriSolver
     
     def duplicate(p:Puzzle, s:Square):Boolean =
     {
-      val row = p.getRowY(s.y).take(s.x-1) ++ p.getRowY(s.y).drop(s.x);
-      val column = p.getColumnX(s.x).take(s.y-1) ++ p.getColumnX(s.x).drop(s.y);
-      var duplicates = 0;
+      val row = p.getRowY(s.y);
+      val column = p.getColumnX(s.x);
+      var duplicates = -2;
       for(i <- row)
       {
         if(s.v == i)
