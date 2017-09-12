@@ -17,31 +17,38 @@ object HitoriSolver
 
     def solvePuzzle(f:File):Unit = {
       val lines = scala.io.Source.fromFile(f).mkString.split("\n");
-      //println(lines);
-      //lines.foreach(print);
+      lines.foreach(print);
       
       //Solve Puzzle here:
       
       val p = new Puzzle(lines);
+      val ps = new PuzzleSolver();
       p.fillPuzzle(lines);
+      ps.doubleCheck(p, p.getSquareList()(0));
       
-      for(i <- 0 to p.SIZE-1)
-      {
-        for(j <- 0 to p.SIZE-1)
-        {
-          print(p.getSquareList()(i+j).v + " ");
-        }
-        print("\n");
-      }
 			
       // Solve puzzle and output to file, like so:
       var outputFile = new PrintWriter( new File(outputPath) , "UTF-8");
-
+      /*
       outputFile.println("B W W W W");
       outputFile.println("W B W B W");
       outputFile.println("W W W W B");
       outputFile.println("W W B W W");
       outputFile.println("B W W W B");
+      */
+      
+      for(i <- 0 to p.SIZE-1)
+      {
+        for(j <- 0 to p.SIZE-1)
+        {
+          val s = p.getSquareList()(i+j);
+          if(s.s)
+            outputFile.print(s.pc(0) + " ");
+          else
+            outputFile.print(s.v + " ");
+        }
+        outputFile.println("");
+      }
 
       outputFile.close();
     }
@@ -51,6 +58,31 @@ object HitoriSolver
   {
     var allSquares = List[Square]();
     val SIZE = lines.length;
+    
+    def getSquareList():List[Square] = allSquares;
+    
+    def getRowX(y:Int):List[Int] =
+    {
+      var xList = List[Int]();
+      for(i <- getSquareList())
+      {
+        if(i.y == y)
+          xList = xList :+ i.y;
+      }
+      return xList;
+    }
+    
+    def getColumnY(x:Int):List[Int] =
+    {
+      var yList = List[Int]();
+      for(i <- getSquareList())
+      {
+        if(i.x == x)
+          yList = yList :+ i.x;
+      }
+      return yList;
+    }
+    
     def fillPuzzle(lines:Array[String]) =
     {
       var i = 0;
@@ -69,18 +101,26 @@ object HitoriSolver
         i += 1;
       }
     }
-    
-    def getSquareList():List[Square] =
-    {
-      return allSquares;
-    }
   }
   
   class PuzzleSolver()
   {
-    def oneCheck(l:List[Square]) =
+    def doubleCheck(p:Puzzle, s:Square) =
     {
       
+      for(i <- 0 to p.SIZE-1)
+      {
+        /*
+        for(j <- 0 to p.SIZE-1)
+        {
+          val x = p.getSquareList()(i+j);
+          
+          if(x == 1)
+            x.setSolution('B');
+        }
+        */
+        println("Row " + p.getRowX(p.getSquareList()(i).x) + ", square value: " + s.v);
+      }
     }
   }
   
@@ -93,8 +133,12 @@ object HitoriSolver
     var s = solved;
     var pc = possibleColors;
     
-    def getPossibleColors():List[Char] = pc;
-    def setPossibleColors(l:List[Char]) = { this.pc = l; }
+    def getSolution():Char = this.pc(0);
+    def setSolution(c:Char) =
+    {
+      this.s = true;
+      this.pc = List[Char](c);
+    }
     
     def getSolved():Boolean = s;
     def setSolved(b:Boolean) = { this.s = b; }
