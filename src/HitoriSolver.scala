@@ -1,4 +1,5 @@
 import java.io.{File, PrintWriter}
+import scala.util;
 
 object HitoriSolver
 {
@@ -23,7 +24,7 @@ object HitoriSolver
       
       val p = new Puzzle(lines);
       p.fillPuzzle(lines);
-      println(p.getSquareList().foreach(_.v));
+      println(p.getSquareList().foreach(_.v) + "v");
       println(p.getSquareList()(3).v);
 
       // Solve puzzle and output to file, like so:
@@ -44,12 +45,12 @@ object HitoriSolver
     var allSquares = List[Square]();
     def fillPuzzle(lines:Array[String]) =
     {
-      val n = lines.mkString.split(" ");
-      //n.foreach(println);
       var i = 0;
-      while(i < n.length)
+      while(i < lines.length)
       {
-        val s = new Square(1, 1, n(i));
+        val n2 = lines(i).mkString.split(" ");
+        val n2Int = n2.map(_.toInt);
+        val s = new Square(1, 1, n2(i));
         allSquares = allSquares :+ s;
         i += 1;
       }
