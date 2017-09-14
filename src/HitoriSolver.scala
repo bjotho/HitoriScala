@@ -25,6 +25,11 @@ object HitoriSolver
       val ps = new PuzzleSolver();
       p.fillPuzzle(lines);
       ps.iterate(p);
+      for(i <- p.getSquareList())
+      {
+        ps.patternMatchTest(p, i);
+      }
+      
       
 			
       // Solve puzzle and output to file, like so:
@@ -61,24 +66,29 @@ object HitoriSolver
     
     def getSquareList():List[Square] = allSquares;
     
-    def getRowY(y:Int):List[Int] =
+    def getSquareXY(x:Int, y:Int):Square =
     {
-      var xList = List[Int]();
+      return getSquareList().filter(_.x == x).filter(_.y == y)(0);
+    }
+    
+    def getRowY(y:Int):List[Square] =
+    {
+      var xList = List[Square]();
       for(i <- getSquareList())
       {
         if(i.y == y)
-          xList = xList :+ i.v;
+          xList = xList :+ i;
       }
       return xList;
     }
     
-    def getColumnX(x:Int):List[Int] =
+    def getColumnX(x:Int):List[Square] =
     {
-      var yList = List[Int]();
+      var yList = List[Square]();
       for(i <- getSquareList())
       {
         if(i.x == x)
-          yList = yList :+ i.v;
+          yList = yList :+ i;
       }
       return yList;
     }
@@ -110,34 +120,98 @@ object HitoriSolver
       
       for(i <- 0 to p.SIZE-1)
       {
-        //val row = p.getRowY(p.getSquareList()(i*p.SIZE).y);
         for(j <- 0 to p.SIZE-1)
         {
           val s = p.getSquareList()((i*p.SIZE)+j);
-          if(!duplicate(p, s))
-            s.setSolution('W');
-          //val column = p.getColumnX(p.getSquareList()(j).x);
-          //println("\nRow " + (i+1) + ": " + row + "\nColumn " + (j+1) + ": " + column);
+          //if(duplicates(p, s) <= 0)
+            //s.setSolution('W');
+          //else
+          //{
+            /*
+            spaceCheck(p, p.getColumnX(s.x));
+            spaceCheck(p, p.getRowY(s.y));
+            */
+          //}
         }
       }
     }
     
-    def duplicate(p:Puzzle, s:Square):Boolean =
+    def spaceCheck(p:Puzzle, l:List[Square]) =
+    {
+      var vList = List[Int]();
+      for(i <- l)
+      {
+        vList = vList :+ i.v;
+      }
+      for(i <- 0 to (l.length-3))
+      {
+        if(vList(i) == vList(i+2))
+          l(i+1).setSolution('W');
+      }
+    }
+    
+    def patternMatchTest(p:Puzzle, s:Square) =
+    {
+      val row = p.getRowY(s.y);
+      val col = p.getColumnX(s.x);
+
+      matchList(p, s, row, true);
+      matchList(p, s, col, false);
+    }
+    
+    def matchList(p:Puzzle, s:Square, l:List[Square], rowCheck:Boolean) =
+    {
+      for(i <- 0 to (l.length-3))
+      {
+        var vList = List[Int]();
+        for(j <- i to (i+2))
+        {
+          vList = vList :+ l(j).v;
+        }
+        vList match
+        {
+          case List(s.v, _, s.v) => 
+            if(rowCheck)
+            {
+              //println("p.getSquareList()((((s.x-1)*p.SIZE)+(s.y-1))).v = " + s.x);
+              if(p.getSquareXY(s.x, s.y).v == p.getSquareXY((s.x+2), s.y).v)
+              {
+                p.getSquareXY(s.x, s.y).setSolution('H');
+              }
+              /*else
+              {
+                p.getSquareList()((((s.x)*p.SIZE)+(s.y-1))).setSolution('H');
+              }*/
+            }
+          case _ => print("");
+        }
+      }
+    }
+    
+    def duplicates(p:Puzzle, s:Square):Int =
     {
       val row = p.getRowY(s.y);
       val column = p.getColumnX(s.x);
       var duplicates = -2;
       for(i <- row)
       {
-        if(s.v == i)
+        if(s.v == i.v)
+        {
           duplicates += 1;
+          if(i.pc(0) == 'W' && !s.getSolved())
+            s.setSolution('B');
+        }
       }
       for(i <- column)
       {
-        if(s.v == i)
+        if(s.v == i.v)
+        {
           duplicates += 1;
+          if(i.pc(0) == 'W' && !s.getSolved())
+            s.setSolution('B');
+        }
       }
-      return (duplicates > 0);
+      return duplicates;
     }
   }
   
