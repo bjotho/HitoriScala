@@ -203,7 +203,7 @@ object HitoriSolver
     var s = solved;
     var pc = possibleColors;
     
-    def getSolved():Boolean = s;
+    def getSolved():Boolean = this.s;
     def getSolution():Char = this.pc(0);
     def setSolution(c:Char, p:Puzzle) =
     {
