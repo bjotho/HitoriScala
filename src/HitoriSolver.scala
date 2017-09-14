@@ -25,7 +25,6 @@ object HitoriSolver
       p.fillPuzzle(lines);
       ps.iterate(p);
 			
-      // Solve puzzle and output to file, like so:
       var outputFile = new PrintWriter( new File(outputPath) , "UTF-8");
       
       for(i <- 0 to p.SIZE-1)
@@ -106,9 +105,11 @@ object HitoriSolver
   {
     def iterate(p:Puzzle) =
     {
-      //Evig løkke som går helt til brettet er løst (til alle squares har fått angitt en farge)
-      //while(!p.solved)
-      //{
+      //Loop iterating until the board is solved (when all squares have received a color)
+      val LIMIT = 10;
+      var i = 0;
+      while(i < LIMIT)
+      {
          for(i <- p.getUnsolvedSquares())
          {
            if(!i.isCorner(p))
@@ -133,13 +134,19 @@ object HitoriSolver
                  }
                }
              }
-             if(duplicates(p, i) <= 0)
-               i.setSolution('W', p);
            }
+           else
+             cornerCase(p, i);
+           
+           if(duplicates(p, i) <= 0)
+             i.setSolution('W', p);
          }
          if(p.getUnsolvedSquares().isEmpty)
            p.solved = true;
-      //}
+         
+         i += 1;
+      }
+      println("Exit");
     }
     
     def checkBetweenSame(p:Puzzle, s:Square, horizontal:Boolean) =
@@ -149,21 +156,65 @@ object HitoriSolver
       
       
       if(prev.v == next.v)
-      {
-        println("prev.v = " + prev.v + ", prev.i = " + prev.i + ", next.v = " + next.v + ", next.i = " + next.i + ", square number (" + (s.x+1) + ", " + (s.y+1) + "), horizontal = " + horizontal);
         s.setSolution('W', p);
-      }
     }
     
     def getAdjacentSquare(p:Puzzle, s:Square, prev:Boolean, horizontal:Boolean):Square =
     {
       return (prev, horizontal) match
       {
-        case (true, true) => p.getSquareList()(s.i-1);
         case (true, false) => p.getSquareList()(s.i-p.SIZE);
+        case (true, true) => p.getSquareList()(s.i-1);
         case (false, true) => p.getSquareList()(s.i+1);
         case (false, false) => p.getSquareList()(s.i+p.SIZE);
       }
+    }
+    
+    def getAdjacentSquare(p:Puzzle, s:Square, location:String):Square =
+    {
+      return (location) match
+      {
+        case ("above") => p.getSquareList()(s.i-p.SIZE);
+        case ("left") => p.getSquareList()(s.i-1);
+        case ("right") => p.getSquareList()(s.i+1);
+        case ("below") => p.getSquareList()(s.i+p.SIZE);
+      }
+    }
+    
+    def getAdjacentSquares(p:Puzzle, s:Square):List[Square] =
+    {
+      var adjacentSquares = List[Square]();
+      val dir = List[String]("above", "left", "right", "below");
+      
+      for(i <- dir)
+      {
+        squareExists(i);
+      }
+      
+      def squareExists(str:String) =
+      {
+        try
+        {
+          setAdjSqrList(str);
+        }
+        catch
+        {
+          case e: Exception => println(e);
+        }
+      }
+      
+      def setAdjSqrList(str:String) =
+        {
+          var adjSqr = str match
+          {
+            case ("above") => getAdjacentSquare(p, s, "above");
+            case ("left") => getAdjacentSquare(p, s, "left");
+            case ("right") => getAdjacentSquare(p, s, "right");
+            case ("below") => getAdjacentSquare(p, s, "below");
+          }
+          adjacentSquares = adjacentSquares :+ adjSqr;
+        }
+      return adjacentSquares;
     }
     
     def duplicates(p:Puzzle, s:Square):Int =
@@ -176,8 +227,11 @@ object HitoriSolver
         if(s.v == i.v)
         {
           duplicates += 1;
-          if(i.pc(0) == 'W' && !s.getSolved())
+          if(i.getSolution() == 'W' && !s.getSolved())
+          {
             s.setSolution('B', p);
+            surroundBlack(p, s);
+          }
         }
       }
       for(i <- column)
@@ -185,11 +239,34 @@ object HitoriSolver
         if(s.v == i.v)
         {
           duplicates += 1;
-          if(i.pc(0) == 'W' && !s.getSolved())
+          if(i.getSolution() == 'W' && !s.getSolved())
+          {
             s.setSolution('B', p);
+            surroundBlack(p, s);
+          }
         }
       }
       return duplicates;
+    }
+    
+    def surroundBlack(p:Puzzle, s:Square) =
+    {
+      val adj = getAdjacentSquares(p, s);
+      
+      for(i <- adj)
+      {
+        if(!i.getSolved())
+          i.setSolution('W', p);
+      }
+    }
+    
+    def cornerCase(p:Puzzle, s:Square) =
+    {
+      val adj = getAdjacentSquares(p, s);
+      if(adj.exists(_.v == s.v))
+      {
+        println("Square (" + (s.x+1) + ", " + (s.y+1) + ") is equal to either square (" + (adj(0).x+1) + ", " + (adj(0).y+1) + "), or square (" + (adj(1).x+1) + ", " + (adj(1).y+1) + ")");
+      }
     }
   }
   
