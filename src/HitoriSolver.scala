@@ -106,7 +106,7 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      val LIMIT = 10;
+      val LIMIT = 2;
       var i = 0;
       while(i < LIMIT)
       {
@@ -151,12 +151,17 @@ object HitoriSolver
     
     def checkBetweenSame(p:Puzzle, s:Square, horizontal:Boolean) =
     {
-      var prev = getAdjacentSquare(p, s, true, horizontal);
-      var next = getAdjacentSquare(p, s, false, horizontal);
+      var adjSquares = List[Square]();
+      if(horizontal)
+        adjSquares = getAdjacentSquares(p, s, List[String]("left", "right"));
+      else
+        adjSquares = getAdjacentSquares(p, s, List[String]("above", "below"));
       
-      
-      if(prev.v == next.v)
-        s.setSolution('W', p);
+      if(adjSquares.length == 2)
+      {
+        if(adjSquares(0).v == adjSquares(1).v)
+          s.setSolution('W', p);
+      }
     }
     
     def getAdjacentSquare(p:Puzzle, s:Square, prev:Boolean, horizontal:Boolean):Square =
@@ -164,8 +169,20 @@ object HitoriSolver
       return (prev, horizontal) match
       {
         case (true, false) => p.getSquareList()(s.i-p.SIZE);
-        case (true, true) => p.getSquareList()(s.i-1);
-        case (false, true) => p.getSquareList()(s.i+1);
+        case (true, true) =>
+          {
+            if(s.i % p.SIZE == 0)
+              return p.getSquareList()(s.i-1)
+            else
+              return p.getSquareList()(-1);
+          }
+        case (false, true) =>
+          {
+            if(s.i % (p.SIZE-1) == 0)
+              return p.getSquareList()(s.i+1);
+            else
+              return p.getSquareList()(-1);
+          }
         case (false, false) => p.getSquareList()(s.i+p.SIZE);
       }
     }
@@ -175,16 +192,28 @@ object HitoriSolver
       return (location) match
       {
         case ("above") => p.getSquareList()(s.i-p.SIZE);
-        case ("left") => p.getSquareList()(s.i-1);
-        case ("right") => p.getSquareList()(s.i+1);
+        case ("left") =>
+          {
+            if(s.i % p.SIZE == 0)
+              return p.getSquareList()(s.i-1)
+            else
+              return p.getSquareList()(-1);
+          }
+        case ("right") =>
+          {
+            if(s.i % (p.SIZE-1) == 0)
+              return p.getSquareList()(s.i+1);
+            else
+              return p.getSquareList()(-1);
+          }
         case ("below") => p.getSquareList()(s.i+p.SIZE);
       }
     }
     
-    def getAdjacentSquares(p:Puzzle, s:Square):List[Square] =
+    def getAdjacentSquares(p:Puzzle, s:Square, l:List[String] = List[String]("above", "left", "right", "below")):List[Square] =
     {
       var adjacentSquares = List[Square]();
-      val dir = List[String]("above", "left", "right", "below");
+      val dir = l;
       
       for(i <- dir)
       {
@@ -199,7 +228,7 @@ object HitoriSolver
         }
         catch
         {
-          case e: Exception => println(e);
+          case e: Exception => {/*println(e);*/}
         }
       }
       
@@ -266,6 +295,34 @@ object HitoriSolver
       if(adj.exists(_.v == s.v))
       {
         println("Square (" + (s.x+1) + ", " + (s.y+1) + ") is equal to either square (" + (adj(0).x+1) + ", " + (adj(0).y+1) + "), or square (" + (adj(1).x+1) + ", " + (adj(1).y+1) + ")");
+        var adjSqrsLists = List[List[Square]]();
+        for(i <- adj)
+        {
+          adjSqrsLists = adjSqrsLists :+ getAdjacentSquares(p, i);
+          println("getAdjacentSquares(p, i)(0): (" + (getAdjacentSquares(p, i)(0).x+1) + ", " + (getAdjacentSquares(p, i)(0).y+1) + ")");
+        }
+        
+        for(i <- 0 to adjSqrsLists(0).length-1)
+        {
+          if((adjSqrsLists(0)(i).i == adjSqrsLists(1)(i).i) && adjSqrsLists(0)(i).v != s.v)
+          {
+            val diagSquare = adjSqrsLists(0)(i);
+            for(j <- adj)
+            {
+              if(diagSquare.v == j.v)
+              {
+                if(!s.getSolved())
+                  s.setSolution('B', p);
+                
+                if(!diagSquare.getSolved())
+                {
+                  diagSquare.setSolution('B', p);
+                  surroundBlack(p, diagSquare);
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
