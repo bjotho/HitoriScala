@@ -135,10 +135,10 @@ object HitoriSolver
                }
              }
            }
-           //else
-             //cornerCase(p, i);
+           else
+             cornerCase(p, i);
            
-           if(duplicates(p, i) == 0)
+           if(duplicates(p, i) <= 0)
              i.setSolution('W', p);
          }
          if(p.getUnsolvedSquares().isEmpty)
@@ -255,12 +255,10 @@ object HitoriSolver
     def duplicatesRow(p:Puzzle, s:Square):Int =
     {
       val row = p.getRowY(s.y).filter(_.i != s.i);
-      print("row: ");
       var duplicatesRow = 0;
       
       for(i <- row)
       {
-        print(i.v + " ");
         if(s.v == i.v)
         {
           duplicatesRow += 1;
@@ -271,20 +269,16 @@ object HitoriSolver
           }
         }
       }
-      print("\n");
-      println("duplicatesRow for square (" + (s.x+1) + ", " + (s.y+1) + "), value " + s.v + " = " + duplicatesRow);
       return duplicatesRow;
     }
     
     def duplicatesCol(p:Puzzle, s:Square):Int =
     {
-      val col = p.getColumnX(s.y).filter(_.i != s.i);
-      print("col: ");
+      val col = p.getColumnX(s.x).filter(_.i != s.i);
       var duplicatesCol = 0;
       
       for(i <- col)
       {
-        print(i.v + " ");
         if(s.v == i.v)
         {
           duplicatesCol += 1;
@@ -295,8 +289,6 @@ object HitoriSolver
           }
         }
       }
-      print("\n");
-      println("duplicatesCol for square (" + (s.x+1) + ", " + (s.y+1) + "), value " + s.v + " = " + duplicatesCol);
       return duplicatesCol;
     }
     
