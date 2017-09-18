@@ -107,8 +107,8 @@ object HitoriSolver
     {
       //Loop iterating until the board is solved (when all squares have received a color)
       val LIMIT = 2;
-      var i = 0;
-      while(i < LIMIT)
+      var c = 0;
+      while(c < LIMIT)
       {
          for(i <- p.getUnsolvedSquares())
          {
@@ -135,8 +135,15 @@ object HitoriSolver
                }
              }
            }
-           else
-             cornerCase(p, i);
+           //else
+             //cornerCase(p, i);
+           
+           var l = getAdjacentSquares(p, i);
+           
+           for(j <- l)
+           {
+             println("Square " + (i.i+1) + ", adjacent square: " + (j.i+1) + ", value " + j.v);
+           }
            
            if(duplicates(p, i) <= 0)
              i.setSolution('W', p);
@@ -144,7 +151,7 @@ object HitoriSolver
          if(p.getUnsolvedSquares().isEmpty)
            p.solved = true;
          
-         i += 1;
+         c += 1;
       }
       println("Exit");
     }
@@ -289,7 +296,7 @@ object HitoriSolver
       }
     }
     
-    def cornerCase(p:Puzzle, s:Square) =
+    /*def cornerCase(p:Puzzle, s:Square) =
     {
       val adj = getAdjacentSquares(p, s);
       if(adj.exists(_.v == s.v))
@@ -324,7 +331,7 @@ object HitoriSolver
           }
         }
       }
-    }
+    }*/
   }
   
   
