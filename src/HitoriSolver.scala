@@ -251,7 +251,7 @@ object HitoriSolver
           s.setSolution('B', p);
           surroundBlack(p, s);
         }
-        if(!duplicatesInRow.exists(_.getSolved == false) && duplicatesInRow.forall(_.getSolution() == 'B'))
+        if(duplicatesInRow.forall(_.getSolved == true) && duplicatesInRow.forall(_.getSolution() == 'B'))
         {
           s.setSolution('W', p);
         }
@@ -270,7 +270,7 @@ object HitoriSolver
           s.setSolution('B', p);
           surroundBlack(p, s);
         }
-        if(!duplicatesInCol.exists(_.getSolved == false) && duplicatesInCol.forall(_.getSolution() == 'B'))
+        if(duplicatesInCol.forall(_.getSolved == true) && duplicatesInCol.forall(_.getSolution() == 'B'))
         {
           s.setSolution('W', p);
         }
@@ -287,6 +287,30 @@ object HitoriSolver
         if(!i.getSolved())
           i.setSolution('W', p);
       }
+    }
+    
+    def whiteIsolated(p:Puzzle, s:Square):Boolean =
+    {
+      var allWhiteAndUnsolved = 0;
+      var whiteAndUnsolved = 0;
+      var checkedIndexes = -1;
+      for(i <- p.getSquareList())
+      {
+        if(i.getSolution() != 'B' && i.i != s.i)
+        {
+          allWhiteAndUnsolved += 1;
+        }
+      }
+      val adjSquareList = getAdjacentSquares(p, s);
+      for(i <- adjSquareList)
+      {
+        if(adjSquareList(i).getSolved() == false || adjSquareList(i).getSolution == 'W')
+        {
+          
+        }
+      }
+      
+      return false;
     }
     
     //To better understand how this method works, try un-commenting all the println commands and run
