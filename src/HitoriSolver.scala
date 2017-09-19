@@ -50,6 +50,7 @@ object HitoriSolver
     var allSquares = List[Square]();
     var unsolvedSquares = List[Square]();
     var solved = false;
+    var noChange = true;
     
     def getSquareList():List[Square] = allSquares;
     def getUnsolvedSquares():List[Square] = unsolvedSquares;
@@ -117,6 +118,12 @@ object HitoriSolver
       {
          for(i <- p.getUnsolvedSquares())
          {
+           /*if(p.noChange)
+           {
+             //Set an unsolved square to Black and check if valid
+           }*/
+           p.noChange = true;
+           
            if(!i.isCorner(p))
            {
              if(!i.isEdge(p))
@@ -166,30 +173,6 @@ object HitoriSolver
       {
         if(adjSquares(0).v == adjSquares(1).v)
           s.setSolution('W', p);
-      }
-    }
-    
-    @deprecated
-    def getAdjacentSquare(p:Puzzle, s:Square, prev:Boolean, horizontal:Boolean):Square =
-    {
-      return (prev, horizontal) match
-      {
-        case (true, false) => p.getSquareList()(s.i-p.SIZE);
-        case (true, true) =>
-          {
-            if(s.i % p.SIZE != 0)
-              return p.getSquareList()(s.i-1)
-            else
-              return p.getSquareList()(-1);
-          }
-        case (false, true) =>
-          {
-            if(s.i % p.SIZE != p.SIZE-1)
-              return p.getSquareList()(s.i+1);
-            else
-              return p.getSquareList()(-1);
-          }
-        case (false, false) => p.getSquareList()(s.i+p.SIZE);
       }
     }
     
@@ -259,42 +242,40 @@ object HitoriSolver
     
     def duplicatesRow(p:Puzzle, s:Square):Int =
     {
-      val row = p.getRowY(s.y).filter(_.i != s.i);
-      var duplicatesRow = 0;
+      val duplicatesInRow = p.getRowY(s.y).filter(_.i != s.i).filter(_.v == s.v);
       
-      for(i <- row)
+      if(!s.getSolved())
       {
-        if(s.v == i.v)
+        if(duplicatesInRow.exists(_.getSolution() == 'W'))
         {
-          duplicatesRow += 1;
-          if(i.getSolution() == 'W' && !s.getSolved())
-          {
-            s.setSolution('B', p);
-            surroundBlack(p, s);
-          }
+          s.setSolution('B', p);
+          surroundBlack(p, s);
+        }
+        if(!duplicatesInRow.exists(_.getSolved == false) && duplicatesInRow.forall(_.getSolution() == 'B'))
+        {
+          s.setSolution('W', p);
         }
       }
-      return duplicatesRow;
+      return duplicatesInRow.length;
     }
     
     def duplicatesCol(p:Puzzle, s:Square):Int =
     {
-      val col = p.getColumnX(s.x).filter(_.i != s.i);
-      var duplicatesCol = 0;
+      val duplicatesInCol = p.getColumnX(s.x).filter(_.i != s.i).filter(_.v == s.v);
       
-      for(i <- col)
+      if(!s.getSolved())
       {
-        if(s.v == i.v)
+        if(duplicatesInCol.exists(_.getSolution() == 'W'))
         {
-          duplicatesCol += 1;
-          if(i.getSolution() == 'W' && !s.getSolved())
-          {
-            s.setSolution('B', p);
-            surroundBlack(p, s);
-          }
+          s.setSolution('B', p);
+          surroundBlack(p, s);
+        }
+        if(!duplicatesInCol.exists(_.getSolved == false) && duplicatesInCol.forall(_.getSolution() == 'B'))
+        {
+          s.setSolution('W', p);
         }
       }
-      return duplicatesCol;
+      return duplicatesInCol.length;
     }
     
     def surroundBlack(p:Puzzle, s:Square) =
@@ -308,23 +289,25 @@ object HitoriSolver
       }
     }
     
+    //To better understand how this method works, try un-commenting all the println commands and run
     def cornerCase(p:Puzzle, s:Square) =
     {
       val adj = getAdjacentSquares(p, s);
       if(adj.exists(_.v == s.v))
       {
-        println("Square (" + (s.x+1) + ", " + (s.y+1) + ") is equal to either square (" + (adj(0).x+1) + ", " + (adj(0).y+1) + "), or square (" + (adj(1).x+1) + ", " + (adj(1).y+1) + ")");
+        //println("Square (" + (s.x+1) + ", " + (s.y+1) + ") is equal to either square (" + (adj(0).x+1) + ", " + (adj(0).y+1) + "), or square (" + (adj(1).x+1) + ", " + (adj(1).y+1) + ")");
         var adjSqrLists = List[List[Square]]();
         var c = 0;
         for(i <- adj)
         {
           adjSqrLists = adjSqrLists :+ getAdjacentSquares(p, i);
-          print("Square adjacent to (" + (i.x+1) + ", " + (i.y+1) + "): ");
+          
+          /*print("Square adjacent to (" + (i.x+1) + ", " + (i.y+1) + "): ");
           for(j <- 0 to adj.length)
           {
             print("(" + (getAdjacentSquares(p, i)(j).x+1) + ", " + (getAdjacentSquares(p, i)(j).y+1) + ") ");
           }
-          print("\n");
+          print("\n");*/
           c += 1;
         }
         
@@ -332,7 +315,7 @@ object HitoriSolver
         {
           if((adjSqrLists(0).exists(_.i == adjSqrLists(1)(i).i)) && adjSqrLists(1)(i).i != s.i)
           {
-            println("Match! adjSqrsLists(1)(" + i + ") = (" + (adjSqrLists(1)(i).x+1) + ", " + (adjSqrLists(1)(i).y+1) + "), value = " + adjSqrLists(1)(i).v);
+            //println("Match! adjSqrsLists(1)(" + i + ") = (" + (adjSqrLists(1)(i).x+1) + ", " + (adjSqrLists(1)(i).y+1) + "), value = " + adjSqrLists(1)(i).v);
             var cornerList = List[Square](s);
             for(j <- adj)
             {
@@ -346,7 +329,7 @@ object HitoriSolver
                 if(cornerList(j).i != cornerList(3).i && cornerList(j).v == cornerList(3).v || cornerList.filter(_.v != cornerList(0).v).isEmpty)
                 {
                   val diagSquare = cornerList(3);
-                  println("Success. diagSquare = (" + (diagSquare.x+1) + ", " + (diagSquare.y+1) + "), value = " + diagSquare.v);
+                  //println("Success. diagSquare = (" + (diagSquare.x+1) + ", " + (diagSquare.y+1) + "), value = " + diagSquare.v);
                   for(j <- adj)
                   {
                     if(diagSquare.v == j.v)
@@ -387,6 +370,7 @@ object HitoriSolver
       this.s = true;
       this.pc = List[Char](c);
       p.setUnsolvedSquares(this);
+      p.noChange = false;
     }
     
     def isEdge(p:Puzzle):Boolean = (x == 0 || y == 0 || x == p.SIZE-1 || y == p.SIZE-1);
