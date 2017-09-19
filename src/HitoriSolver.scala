@@ -33,7 +33,7 @@ object HitoriSolver
         {
           val s = p.getSquareList()((i*p.SIZE)+j);
           if(s.s)
-            outputFile.print(s.pc(0) + " ");
+            outputFile.print(s.sol + " ");
           else
             outputFile.print(s.v + " ");
         }
@@ -51,6 +51,7 @@ object HitoriSolver
     var unsolvedSquares = List[Square]();
     var solved = false;
     var noChange = true;
+    var runOneTime = true;
     
     def getSquareList():List[Square] = allSquares;
     def getUnsolvedSquares():List[Square] = unsolvedSquares;
@@ -98,7 +99,7 @@ object HitoriSolver
         val n = lines(i).mkString.split(" ");
         for(j <- 0 to n.length-1)
         {
-          val c = n(j).toCharArray()(0).toString().toInt;
+          val c = n(j).replaceAll("[^0-9]", "").toInt;
           val s = new Square(j, i, (i*SIZE)+j, c);
           allSquares = allSquares :+ s;
           unsolvedSquares = unsolvedSquares :+ s;
@@ -118,44 +119,53 @@ object HitoriSolver
       {
          for(i <- p.getUnsolvedSquares())
          {
-           /*if(p.noChange)
+           if(p.noChange)
            {
+             if(whiteIsolationCheck(p, i))
+             {
+               println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
+               i.setSolution('_', p);
+             }
              //Set an unsolved square to Black and check if valid
-           }*/
+           }
            p.noChange = true;
            
-           if(!i.isCorner(p))
+           if(p.runOneTime)
            {
-             if(!i.isEdge(p))
+             if(!i.isCorner(p))
              {
-               checkBetweenSame(p, i, true);
-               checkBetweenSame(p, i, false);
-             }
-             else
-             {
-               (i.x, i.y) match
+               if(!i.isEdge(p))
                {
-                 case (0, _) => checkBetweenSame(p, i, false);
-                 case (_, 0) => checkBetweenSame(p, i, true);
-                 case (x, y) =>
+                 checkBetweenSame(p, i, true);
+                 checkBetweenSame(p, i, false);
+               }
+               else
+               {
+                 (i.x, i.y) match
                  {
-                   if(x == p.SIZE-1)
-                     checkBetweenSame(p, i, false);
-                   if(y == p.SIZE-1)
-                     checkBetweenSame(p, i, true);
+                   case (0, _) => checkBetweenSame(p, i, false);
+                   case (_, 0) => checkBetweenSame(p, i, true);
+                   case (x, y) =>
+                   {
+                     if(x == p.SIZE-1)
+                       checkBetweenSame(p, i, false);
+                     if(y == p.SIZE-1)
+                       checkBetweenSame(p, i, true);
+                   }
                  }
                }
              }
-           }
-           else
-             cornerCase(p, i);
+             else
+               cornerCase(p, i);
+             }
            
-           if(duplicates(p, i) <= 0)
-             i.setSolution('W', p);
+           //if(duplicates(p, i) <= 0)
+             //i.setSolution('W', p);
          }
          if(p.getUnsolvedSquares().isEmpty)
            p.solved = true;
          
+         p.runOneTime = false;
          c += 1;
       }
       println("Exit");
@@ -289,29 +299,46 @@ object HitoriSolver
       }
     }
     
-    def whiteIsolated(p:Puzzle, s:Square):Boolean =
+    def whiteIsolationCheck(p:Puzzle, s:Square):Boolean =
     {
       var allWhiteAndUnsolved = 0;
-      var whiteAndUnsolved = 0;
-      var checkedIndexes = -1;
+      var checkedIndexes = List[Int]();
+      
+      def setCheckedIndexes(s:Square) =
+      {
+        checkedIndexes = checkedIndexes :+ s.i;
+      }
+      def getCheckedIndexes():List[Int] = checkedIndexes;
+      
       for(i <- p.getSquareList())
       {
-        if(i.getSolution() != 'B' && i.i != s.i)
+        if(i.getSolution() != 'B')
         {
           allWhiteAndUnsolved += 1;
         }
       }
-      val adjSquareList = getAdjacentSquares(p, s);
-      for(i <- adjSquareList)
+      
+      def countSection(p:Puzzle, s:Square, l:List[Square]):Int =
       {
-        if(adjSquareList(i).getSolved() == false || adjSquareList(i).getSolution == 'W')
+        for(i <- l)
         {
-          
+          if(!getCheckedIndexes().contains(s.i) && !getCheckedIndexes().contains(i.i) && s.getSolution() != 'B')
+          {
+            setCheckedIndexes(i);
+            println("checkedIndexes: ");
+            getCheckedIndexes().foreach(print);
+            print("\n");
+            countSection(p, s, getAdjacentSquares(p, i));
+          }
         }
+        println("New call");
+        return getCheckedIndexes().length;
       }
       
-      return false;
+      return (allWhiteAndUnsolved != countSection(p, s, List[Square](getAdjacentSquares(p, s)(0))));
     }
+    
+    
     
     //To better understand how this method works, try un-commenting all the println commands and run
     def cornerCase(p:Puzzle, s:Square) =
@@ -378,21 +405,21 @@ object HitoriSolver
   }
   
   
-  class Square(xPos:Int, yPos:Int, index:Int, value:Int, possibleColors:List[Char] = List[Char]('B', 'W'), solved:Boolean = false)
+  class Square(xPos:Int, yPos:Int, index:Int, value:Int, solution:Char = 'G', solved:Boolean = false)
   {
     val x = xPos;
     val y = yPos;
     val i = index;
     val v = value;
     var s = solved;
-    var pc = possibleColors;
+    var sol = solution;
     
     def getSolved():Boolean = this.s;
-    def getSolution():Char = this.pc(0);
+    def getSolution():Char = this.sol;
     def setSolution(c:Char, p:Puzzle) =
     {
       this.s = true;
-      this.pc = List[Char](c);
+      this.sol = c;
       p.setUnsolvedSquares(this);
       p.noChange = false;
     }

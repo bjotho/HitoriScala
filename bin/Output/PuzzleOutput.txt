@@ -1,5 +1,5 @@
-B W W W W 
-W B W B W 
-W W W W B 
-W W B W W 
-B W W W B 
+_ W _ _ _ 
+_ _ _ _ W 
+_ _ _ W _ 
+_ _ _ _ _ 
+_ _ _ W 4 
