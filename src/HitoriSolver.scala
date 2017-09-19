@@ -63,6 +63,11 @@ object HitoriSolver
       return getSquareList().filter(_.x == x).filter(_.y == y)(0);
     }
     
+    def getSquareIndex(i:Int):Square =
+    {
+      return getSquareList.filter(_.i == i)(0);
+    }
+    
     def getRowY(y:Int):List[Square] =
     {
       var xList = List[Square]();
@@ -106,7 +111,7 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      val LIMIT = 1;
+      val LIMIT = 10;
       var c = 0;
       while(c < LIMIT)
       {
@@ -309,34 +314,53 @@ object HitoriSolver
       if(adj.exists(_.v == s.v))
       {
         println("Square (" + (s.x+1) + ", " + (s.y+1) + ") is equal to either square (" + (adj(0).x+1) + ", " + (adj(0).y+1) + "), or square (" + (adj(1).x+1) + ", " + (adj(1).y+1) + ")");
-        var adjSqrsLists = List[List[Square]]();
+        var adjSqrLists = List[List[Square]]();
+        var c = 0;
         for(i <- adj)
         {
-          adjSqrsLists = adjSqrsLists :+ getAdjacentSquares(p, i);
-          print("Square adjacent to (" + (adjSqrsLists(0)(0).x+1) + ", " + (adjSqrsLists(0)(0).y+1) + "): ");
+          adjSqrLists = adjSqrLists :+ getAdjacentSquares(p, i);
+          print("Square adjacent to (" + (i.x+1) + ", " + (i.y+1) + "): ");
           for(j <- 0 to adj.length)
           {
             print("(" + (getAdjacentSquares(p, i)(j).x+1) + ", " + (getAdjacentSquares(p, i)(j).y+1) + ") ");
           }
           print("\n");
+          c += 1;
         }
         
-        for(i <- 0 to adjSqrsLists(0).length-1)
+        for(i <- 0 to adjSqrLists(0).length-1)
         {
-          if((adjSqrsLists(0)(i).i == adjSqrsLists(1)(i).i) && adjSqrsLists(0)(i).i != s.i)
+          if((adjSqrLists(0).exists(_.i == adjSqrLists(1)(i).i)) && adjSqrLists(1)(i).i != s.i)
           {
-            val diagSquare = adjSqrsLists(0)(i);
+            println("Match! adjSqrsLists(1)(" + i + ") = (" + (adjSqrLists(1)(i).x+1) + ", " + (adjSqrLists(1)(i).y+1) + "), value = " + adjSqrLists(1)(i).v);
+            var cornerList = List[Square](s);
             for(j <- adj)
             {
-              if(diagSquare.v == j.v)
+              cornerList = cornerList :+ j;
+            }
+            cornerList = cornerList :+ adjSqrLists(1)(i);
+            for(j <- 0 to cornerList.length-1)
+            {
+              if(cornerList(0).v != cornerList(j).v || cornerList.filter(_.v != cornerList(0).v).isEmpty)
               {
-                if(!s.getSolved())
-                  s.setSolution('B', p);
-                
-                if(!diagSquare.getSolved())
+                if(cornerList(j).i != cornerList(3).i && cornerList(j).v == cornerList(3).v || cornerList.filter(_.v != cornerList(0).v).isEmpty)
                 {
-                  diagSquare.setSolution('B', p);
-                  surroundBlack(p, diagSquare);
+                  val diagSquare = cornerList(3);
+                  println("Success. diagSquare = (" + (diagSquare.x+1) + ", " + (diagSquare.y+1) + "), value = " + diagSquare.v);
+                  for(j <- adj)
+                  {
+                    if(diagSquare.v == j.v)
+                    {
+                      if(!s.getSolved())
+                        s.setSolution('B', p);
+                      
+                      if(!diagSquare.getSolved())
+                      {
+                        diagSquare.setSolution('B', p);
+                        surroundBlack(p, diagSquare);
+                      }
+                    }
+                  }
                 }
               }
             }
