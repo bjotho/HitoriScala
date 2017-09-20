@@ -116,9 +116,9 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      val LIMIT = 10;
-      var c = 0;
-      while(/*!p.solved*/c < LIMIT)
+      /*val LIMIT = 10;
+      var c = 0;*/
+      while(!p.solved/*c < LIMIT*/)
       {
          for(i <- p.getUnsolvedSquares())
          {
@@ -161,8 +161,8 @@ object HitoriSolver
                cornerCase(p, i);
              }
            
-           //if(duplicates(p, i) <= 0)
-             //i.setSolution('W', p);
+           if(duplicates(p, i) <= 0)
+             i.setSolution('W', p);
          }
          if(p.getUnsolvedSquares().isEmpty)
            p.solved = true;
@@ -174,7 +174,7 @@ object HitoriSolver
          else
            p.prevBoard = p.unsolvedSquares;
          
-         c += 1;
+         //c += 1;
       }
       println("Exit");
     }
