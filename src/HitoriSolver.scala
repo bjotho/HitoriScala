@@ -49,9 +49,12 @@ object HitoriSolver
     val SIZE = lines.length;
     var allSquares = List[Square]();
     var unsolvedSquares = List[Square]();
+    var prevBoard = List[Square]();
     var solved = false;
-    var noChange = true;
     var runOneTime = true;
+    var noChange = false;
+    
+    def prevBoardEqual():Boolean = (prevBoard.length == unsolvedSquares.length);
     
     def getSquareList():List[Square] = allSquares;
     def getUnsolvedSquares():List[Square] = unsolvedSquares;
@@ -115,7 +118,7 @@ object HitoriSolver
       //Loop iterating until the board is solved (when all squares have received a color)
       val LIMIT = 10;
       var c = 0;
-      while(c < LIMIT)
+      while(/*!p.solved*/c < LIMIT)
       {
          for(i <- p.getUnsolvedSquares())
          {
@@ -128,7 +131,6 @@ object HitoriSolver
              }
              //Set an unsolved square to Black and check if valid
            }
-           p.noChange = true;
            
            if(p.runOneTime)
            {
@@ -166,6 +168,12 @@ object HitoriSolver
            p.solved = true;
          
          p.runOneTime = false;
+         
+         if(p.prevBoardEqual())
+           p.noChange = true;
+         else
+           p.prevBoard = p.unsolvedSquares;
+         
          c += 1;
       }
       println("Exit");
@@ -302,7 +310,8 @@ object HitoriSolver
     def whiteIsolationCheck(p:Puzzle, s:Square):Boolean =
     {
       var allWhiteAndUnsolved = 0;
-      var checkedIndexes = List[Int]();
+      var checkedIndexes = List[Int](s.i);
+      val startSquare = s;
       
       def setCheckedIndexes(s:Square) =
       {
@@ -317,25 +326,29 @@ object HitoriSolver
           allWhiteAndUnsolved += 1;
         }
       }
+      //println("allWhiteAndUnsolved = " + allWhiteAndUnsolved);
       
-      def countSection(p:Puzzle, s:Square, l:List[Square]):Int =
+      def countSection(p:Puzzle, s:Square, startSquare:Square):Int =
       {
-        for(i <- l)
+        
+        if(!getCheckedIndexes().contains(s.i) && s.getSolution() != 'B')
         {
-          if(!getCheckedIndexes().contains(s.i) && !getCheckedIndexes().contains(i.i) && s.getSolution() != 'B')
+          setCheckedIndexes(s);
+          /*
+          println("checkedIndexes: ");
+          getCheckedIndexes().foreach(print);
+          print("\n");
+          */
+          var adj = getAdjacentSquares(p, s).filter(_.i != startSquare.i);
+          
+          for(i <- 0 to adj.length-1)
           {
-            setCheckedIndexes(i);
-            println("checkedIndexes: ");
-            getCheckedIndexes().foreach(print);
-            print("\n");
-            countSection(p, s, getAdjacentSquares(p, i));
+            countSection(p, adj(i), startSquare);
           }
         }
-        println("New call");
         return getCheckedIndexes().length;
       }
-      
-      return (allWhiteAndUnsolved != countSection(p, s, List[Square](getAdjacentSquares(p, s)(0))));
+      return (allWhiteAndUnsolved != countSection(p, getAdjacentSquares(p, s)(0), startSquare));
     }
     
     
@@ -421,7 +434,6 @@ object HitoriSolver
       this.s = true;
       this.sol = c;
       p.setUnsolvedSquares(this);
-      p.noChange = false;
     }
     
     def isEdge(p:Puzzle):Boolean = (x == 0 || y == 0 || x == p.SIZE-1 || y == p.SIZE-1);
