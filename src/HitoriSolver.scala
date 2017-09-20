@@ -10,7 +10,8 @@ object HitoriSolver
     val outputPath = args(1);
     println(inputPath);
     println(outputPath);
-
+    print("\n");
+    
     val puzzleFile = new File(inputPath);
 
     solvePuzzle(puzzleFile);
@@ -116,7 +117,7 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      /*val LIMIT = 10;
+      /*val LIMIT = 1;
       var c = 0;*/
       while(!p.solved/*c < LIMIT*/)
       {
@@ -127,7 +128,7 @@ object HitoriSolver
              if(whiteIsolationCheck(p, i))
              {
                println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
-               i.setSolution('_', p);
+               i.setSolution('W', p);
              }
              //Set an unsolved square to Black and check if valid
            }
@@ -159,7 +160,16 @@ object HitoriSolver
              }
              else
                cornerCase(p, i);
+             
+             if(duplicatesRow(p, i) >= 2)
+             {
+               twoPlusOnePattern(p, i, p.getRowY(i.y).filter(_.v == i.v));
              }
+             if(duplicatesCol(p, i) >= 2)
+             {
+               twoPlusOnePattern(p, i, p.getColumnX(i.x).filter(_.v == i.v));
+             }
+           }
            
            if(duplicates(p, i) <= 0)
              i.setSolution('W', p);
@@ -294,6 +304,26 @@ object HitoriSolver
         }
       }
       return duplicatesInCol.length;
+    }
+    
+    def twoPlusOnePattern(p:Puzzle, s:Square, l:List[Square]) =
+    {
+      //println(l.length + " duplicates at square (" + (s.x+1) + ", " + (s.y+1) + ")");
+      for(i <- 0 to l.length-2)
+      {
+        if(Math.abs(l(i).i - l(i+1).i) == 1)
+        {
+          var restList = l.filter(_.i != l(i).i).filter(_.i != l(i+1).i);
+          for(j <- 0 to l.length-3)
+          {
+            if(Math.abs(restList(j).i - l(i).i) >= 2 || Math.abs(restList(j).i - l(i+1).i) >= 2)
+            {
+              restList(j).setSolution('B', p);
+              surroundBlack(p, restList(j));
+            }
+          }
+        }
+      }
     }
     
     def surroundBlack(p:Puzzle, s:Square) =
