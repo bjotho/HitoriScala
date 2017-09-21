@@ -10,7 +10,7 @@ object HitoriSolver
     val outputPath = args(1);
     println(inputPath);
     println(outputPath);
-    print("\n");
+    print("\r\n");
     
     val puzzleFile = new File(inputPath);
 
@@ -18,8 +18,8 @@ object HitoriSolver
 
     def solvePuzzle(f:File):Unit = {
       val lines = scala.io.Source.fromFile(f).mkString.split("\n");
-      lines.foreach(print);
-      print("\n");
+      lines.foreach(println);
+      print("\r\n");
       
       val p = new Puzzle(lines);
       val ps = new PuzzleSolver();
@@ -279,10 +279,6 @@ object HitoriSolver
           s.setSolution('B', p);
           surroundBlack(p, s);
         }
-        if(duplicatesInRow.forall(_.getSolved == true) && duplicatesInRow.forall(_.getSolution() == 'B'))
-        {
-          s.setSolution('W', p);
-        }
       }
       return duplicatesInRow.length;
     }
@@ -297,10 +293,6 @@ object HitoriSolver
         {
           s.setSolution('B', p);
           surroundBlack(p, s);
-        }
-        if(duplicatesInCol.forall(_.getSolved == true) && duplicatesInCol.forall(_.getSolution() == 'B'))
-        {
-          s.setSolution('W', p);
         }
       }
       return duplicatesInCol.length;
@@ -367,7 +359,7 @@ object HitoriSolver
           /*
           println("checkedIndexes: ");
           getCheckedIndexes().foreach(print);
-          print("\n");
+          print("\r\n");
           */
           var adj = getAdjacentSquares(p, s).filter(_.i != startSquare.i);
           
@@ -401,7 +393,7 @@ object HitoriSolver
           {
             print("(" + (getAdjacentSquares(p, i)(j).x+1) + ", " + (getAdjacentSquares(p, i)(j).y+1) + ") ");
           }
-          print("\n");*/
+          print("\r\n");*/
           c += 1;
         }
         
