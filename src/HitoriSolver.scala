@@ -8,9 +8,9 @@ object HitoriSolver
 
     val inputPath = args(0);
     val outputPath = args(1);
-    println(inputPath);
-    println(outputPath);
-    print("\r\n");
+    //println(inputPath);
+    //println(outputPath);
+    //print("\n");
     
     val puzzleFile = new File(inputPath);
 
@@ -18,8 +18,8 @@ object HitoriSolver
 
     def solvePuzzle(f:File):Unit = {
       val lines = scala.io.Source.fromFile(f).mkString.split("\n");
-      lines.foreach(println);
-      print("\r\n");
+      //lines.foreach(println);
+      //print("\n");
       
       val p = new Puzzle(lines);
       val ps = new PuzzleSolver();
@@ -117,9 +117,7 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      /*val LIMIT = 1;
-      var c = 0;*/
-      while(!p.solved/*c < LIMIT*/)
+      while(!p.solved)
       {
          for(i <- p.getUnsolvedSquares())
          {
@@ -127,7 +125,7 @@ object HitoriSolver
            {
              if(whiteIsolationCheck(p, i))
              {
-               println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
+               //println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
                i.setSolution('W', p);
              }
              //Set an unsolved square to Black and check if valid
@@ -183,10 +181,8 @@ object HitoriSolver
            p.noChange = true;
          else
            p.prevBoard = p.unsolvedSquares;
-         
-         //c += 1;
       }
-      println("Exit");
+      //println("Exit");
     }
     
     def checkBetweenSame(p:Puzzle, s:Square, horizontal:Boolean) =
@@ -359,7 +355,7 @@ object HitoriSolver
           /*
           println("checkedIndexes: ");
           getCheckedIndexes().foreach(print);
-          print("\r\n");
+          print("\n");
           */
           var adj = getAdjacentSquares(p, s).filter(_.i != startSquare.i);
           
@@ -393,7 +389,7 @@ object HitoriSolver
           {
             print("(" + (getAdjacentSquares(p, i)(j).x+1) + ", " + (getAdjacentSquares(p, i)(j).y+1) + ") ");
           }
-          print("\r\n");*/
+          print("\n");*/
           c += 1;
         }
         
