@@ -1,5 +1,6 @@
 import java.io.{File, PrintWriter}
 import scala.util;
+import scala.util.control.Breaks._;
 
 object HitoriSolver
 {
@@ -24,7 +25,10 @@ object HitoriSolver
       val p = new Puzzle(lines);
       val ps = new PuzzleSolver();
       p.fillPuzzle(lines);
+      
+      println("Start");
       ps.iterate(p);
+      println("Done");
 			
       var outputFile = new PrintWriter( new File(outputPath) , "UTF-8");
       
@@ -62,6 +66,14 @@ object HitoriSolver
     def setUnsolvedSquares(s:Square) =
     {
       this.unsolvedSquares = this.unsolvedSquares.filter(_.i  != s.i);
+    }
+    def resetSquareList(l:List[Square]) =
+    {
+      this.allSquares = l;
+    }
+    def resetUnsolvedSquares(l:List[Square]) =
+    {
+      this.unsolvedSquares = l;
     }
     
     def getSquareXY(x:Int, y:Int):Square =
@@ -117,7 +129,9 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      while(!p.solved)
+      var c = 0;
+      val LIMIT = 10;
+      while(c < LIMIT)
       {
          for(i <- p.getUnsolvedSquares())
          {
@@ -128,7 +142,10 @@ object HitoriSolver
                //println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
                i.setSolution('W', p);
              }
-             //Set an unsolved square to Black and check if valid
+             while(p.prevBoardEqual())
+             {
+               bruteForceBuild(p, 0);
+             }
            }
            
            if(p.runOneTime)
@@ -181,8 +198,84 @@ object HitoriSolver
            p.noChange = true;
          else
            p.prevBoard = p.unsolvedSquares;
+         
+         c += 1;
       }
-      //println("Exit");
+    }
+    
+    def bruteForceBuild(p:Puzzle, n:Int):Unit =
+    {
+      var cachedBoard = p.getSquareList();
+      var cachedUnsolved = p.getUnsolvedSquares();
+      var cachedPrevBoard = p.prevBoard;
+      p.prevBoard = List[Square]();
+      replacements(n);
+      
+      def replacements(replace:Int) =
+      {
+        for(i <- 0 to replace)
+        {
+          p.getUnsolvedSquares()(i).setSolution('B', p);
+        }
+      }
+      
+      while(!p.solved && valid(p))
+      {
+        if(p.prevBoardEqual())
+        {
+          resetToCached();
+          bruteForceBuild(p, (n+1));
+        }
+        for(i <- p.getUnsolvedSquares())
+        {
+          if(duplicates(p, i) <= 0)
+            i.setSolution('W', p);
+       
+          if(p.getUnsolvedSquares().isEmpty)
+            p.solved = true;
+        }
+        
+        if(p.prevBoardEqual())
+          p.noChange = true;
+        else
+          p.prevBoard = p.unsolvedSquares;
+      }
+      
+      if(!valid(p))
+      {
+        resetToCached();
+        p.getUnsolvedSquares()(0).setSolution('W', p);
+      }
+      
+      def resetToCached() =
+      {
+        p.resetSquareList(cachedBoard);
+        p.resetUnsolvedSquares(cachedUnsolved);
+        p.prevBoard = cachedPrevBoard;
+      }
+    }
+    
+    def valid(p:Puzzle):Boolean =
+    {
+      var tempSquareList = p.getSquareList();
+      var tempUnsolvedSquares = p.getUnsolvedSquares();
+      var valid = true;
+      
+      //Check if any black square has an adjacent black square
+      for(i <- p.getSquareList().filter(_.sol == 'B'))
+      {
+        if(getAdjacentSquares(p, i).exists(_.sol == 'B'))
+          valid = false;
+      }
+      
+      //Check if any sections of white are isolated
+      for(i <- p.getSquareList())
+      {
+        if(whiteIsolationCheck(p, i))
+          valid = false;
+      }
+      
+      return valid;
     }
     
     def checkBetweenSame(p:Puzzle, s:Square, horizontal:Boolean) =
