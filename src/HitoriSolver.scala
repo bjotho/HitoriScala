@@ -57,7 +57,6 @@ object HitoriSolver
     var prevBoard = List[Square]();
     var solved = false;
     var runOneTime = true;
-    var noChange = false;
     
     def prevBoardEqual():Boolean = (prevBoard.length == unsolvedSquares.length);
     
@@ -129,23 +128,24 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      var c = 0;
-      val LIMIT = 10;
-      while(c < LIMIT)
+      //var c = 0;
+      //val LIMIT = 20;
+      while(/*c < LIMIT*/!p.solved)
       {
          for(i <- p.getUnsolvedSquares())
          {
-           if(p.noChange)
+           if(!p.runOneTime && p.prevBoardEqual())
            {
              if(whiteIsolationCheck(p, i))
              {
                //println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
                i.setSolution('W', p);
              }
-             while(p.prevBoardEqual())
+             /*if(p.prevBoardEqual())
              {
-               bruteForceBuild(p, 0);
-             }
+               println("Brute force initiate");
+               bruteForceBuild(p, 0, false);
+             }*/
            }
            
            if(p.runOneTime)
@@ -194,37 +194,33 @@ object HitoriSolver
          
          p.runOneTime = false;
          
-         if(p.prevBoardEqual())
-           p.noChange = true;
-         else
-           p.prevBoard = p.unsolvedSquares;
+         p.prevBoard = p.unsolvedSquares;
          
-         c += 1;
+         //c += 1;
       }
     }
     
-    def bruteForceBuild(p:Puzzle, n:Int):Unit =
+    def bruteForceBuild(p:Puzzle, n:Int, changeColour:Boolean):Unit =
     {
       var cachedBoard = p.getSquareList();
       var cachedUnsolved = p.getUnsolvedSquares();
       var cachedPrevBoard = p.prevBoard;
       p.prevBoard = List[Square]();
-      replacements(n);
       
-      def replacements(replace:Int) =
-      {
-        for(i <- 0 to replace)
-        {
-          p.getUnsolvedSquares()(i).setSolution('B', p);
-        }
-      }
+      if(!changeColour)
+        p.getUnsolvedSquares()(n).setSolution('B', p, surroundBlack);
+      else
+        p.getUnsolvedSquares()(n).setSolution('W', p);
       
       while(!p.solved && valid(p))
       {
         if(p.prevBoardEqual())
         {
           resetToCached();
-          bruteForceBuild(p, (n+1));
+          if(changeColour)
+            bruteForceBuild(p, (n+1), !changeColour);
+          else
+            bruteForceBuild(p, n, !changeColour);
         }
         for(i <- p.getUnsolvedSquares())
         {
@@ -233,18 +229,25 @@ object HitoriSolver
        
           if(p.getUnsolvedSquares().isEmpty)
             p.solved = true;
+          
+          if(!valid(p))
+          {
+            break;
+          }
         }
+        if(p.getUnsolvedSquares().isEmpty)
+           p.solved = true;
         
-        if(p.prevBoardEqual())
-          p.noChange = true;
-        else
-          p.prevBoard = p.unsolvedSquares;
+        p.prevBoard = p.unsolvedSquares;
       }
       
       if(!valid(p))
       {
         resetToCached();
-        p.getUnsolvedSquares()(0).setSolution('W', p);
+        if(changeColour)
+          p.getUnsolvedSquares()(n).setSolution('B', p, surroundBlack);
+        else
+          p.getUnsolvedSquares()(n).setSolution('W', p);
       }
       
       def resetToCached() =
@@ -365,8 +368,8 @@ object HitoriSolver
       {
         if(duplicatesInRow.exists(_.getSolution() == 'W'))
         {
-          s.setSolution('B', p);
-          surroundBlack(p, s);
+          s.setSolution('B', p, surroundBlack);
+          //surroundBlack(p, s);
         }
       }
       return duplicatesInRow.length;
@@ -380,8 +383,8 @@ object HitoriSolver
       {
         if(duplicatesInCol.exists(_.getSolution() == 'W'))
         {
-          s.setSolution('B', p);
-          surroundBlack(p, s);
+          s.setSolution('B', p, surroundBlack);
+          //surroundBlack(p, s);
         }
       }
       return duplicatesInCol.length;
@@ -399,16 +402,20 @@ object HitoriSolver
           {
             if(Math.abs(restList(j).i - l(i).i) >= 2 || Math.abs(restList(j).i - l(i+1).i) >= 2)
             {
-              restList(j).setSolution('B', p);
-              surroundBlack(p, restList(j));
+              restList(j).setSolution('B', p, surroundBlack);
+              //surroundBlack(p, restList(j));
             }
           }
         }
       }
     }
     
-    def surroundBlack(p:Puzzle, s:Square) =
+    /*Takes in the puzzle and a black square.
+    Fetches all the adjacent squares to input square.
+    Sets all unsolved adjacent squares to white.*/
+    val surroundBlack = (p:Puzzle, s:Square) =>
     {
+      //println("Square (" + (s.x+1) + ", " + (s.y+1) + ") is black");
       val adj = getAdjacentSquares(p, s);
       
       for(i <- adj)
@@ -510,12 +517,12 @@ object HitoriSolver
                     if(diagSquare.v == j.v)
                     {
                       if(!s.getSolved())
-                        s.setSolution('B', p);
+                        s.setSolution('B', p, surroundBlack);
                       
                       if(!diagSquare.getSolved())
                       {
-                        diagSquare.setSolution('B', p);
-                        surroundBlack(p, diagSquare);
+                        diagSquare.setSolution('B', p, surroundBlack);
+                        //surroundBlack(p, diagSquare);
                       }
                     }
                   }
@@ -540,11 +547,13 @@ object HitoriSolver
     
     def getSolved():Boolean = this.s;
     def getSolution():Char = this.sol;
-    def setSolution(c:Char, p:Puzzle) =
+    def setSolution(c:Char, p:Puzzle, surroundBlack:(Puzzle, Square) => Unit = (Puzzle, Square) => Unit) =
     {
       this.s = true;
       this.sol = c;
       p.setUnsolvedSquares(this);
+      if(c == 'B')
+        surroundBlack(p, this);
     }
     
     def isEdge(p:Puzzle):Boolean = (x == 0 || y == 0 || x == p.SIZE-1 || y == p.SIZE-1);
