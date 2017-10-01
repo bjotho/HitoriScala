@@ -55,8 +55,8 @@ object HitoriSolver
     var allSquares = List[Square]();
     var unsolvedSquares = List[Square]();
     var prevBoard = List[Square]();
-    var solved = false;
     var runOneTime = true;
+    var solved = false;
     
     def prevBoardEqual():Boolean = (prevBoard.length == unsolvedSquares.length);
     
@@ -131,72 +131,81 @@ object HitoriSolver
       //var c = 0;
       //val LIMIT = 20;
       while(/*c < LIMIT*/!p.solved)
-      {
-         for(i <- p.getUnsolvedSquares())
-         {
-           if(!p.runOneTime && p.prevBoardEqual())
-           {
-             if(whiteIsolationCheck(p, i))
-             {
-               //println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
-               i.setSolution('W', p);
-             }
-             /*if(p.prevBoardEqual())
-             {
-               println("Brute force initiate");
-               bruteForceBuild(p, 0, false);
-             }*/
-           }
-           
-           if(p.runOneTime)
-           {
-             if(!i.isCorner(p))
-             {
-               if(!i.isEdge(p))
-               {
-                 checkBetweenSame(p, i, true);
-                 checkBetweenSame(p, i, false);
-               }
-               else
-               {
-                 (i.x, i.y) match
-                 {
-                   case (0, _) => checkBetweenSame(p, i, false);
-                   case (_, 0) => checkBetweenSame(p, i, true);
-                   case (x, y) =>
-                   {
-                     if(x == p.SIZE-1)
-                       checkBetweenSame(p, i, false);
-                     if(y == p.SIZE-1)
-                       checkBetweenSame(p, i, true);
-                   }
-                 }
-               }
-             }
-             else
-               cornerCase(p, i);
+      {    
+        if(p.runOneTime)
+        {
+          for(i <- p.getUnsolvedSquares())
+          {
+            if(!i.isCorner(p))
+            {
+              if(!i.isEdge(p))
+              {
+                checkBetweenSame(p, i, true);
+                checkBetweenSame(p, i, false);
+              }
+              else
+              {
+                (i.x, i.y) match
+                {
+                  case (0, _) => checkBetweenSame(p, i, false);
+                  case (_, 0) => checkBetweenSame(p, i, true);
+                  case (x, y) =>
+                  {
+                    if(x == p.SIZE-1)
+                      checkBetweenSame(p, i, false);
+                    if(y == p.SIZE-1)
+                      checkBetweenSame(p, i, true);
+                  }
+                }
+              }
+            }
+            else
+              cornerCase(p, i);
              
-             if(duplicatesRow(p, i) >= 2)
-             {
-               twoPlusOnePattern(p, i, p.getRowY(i.y).filter(_.v == i.v));
-             }
-             if(duplicatesCol(p, i) >= 2)
-             {
-               twoPlusOnePattern(p, i, p.getColumnX(i.x).filter(_.v == i.v));
-             }
-           }
-           
-           if(duplicates(p, i) <= 0)
-             i.setSolution('W', p);
-         }
-         if(p.getUnsolvedSquares().isEmpty)
-           p.solved = true;
+            if(duplicatesRow(p, i) >= 2)
+            {
+              twoPlusOnePattern(p, i, p.getRowY(i.y).filter(_.v == i.v));
+            }
+            if(duplicatesCol(p, i) >= 2)
+            {
+              twoPlusOnePattern(p, i, p.getColumnX(i.x).filter(_.v == i.v));
+            }
+          }
+        }
+        
+        for(i <- p.getUnsolvedSquares())
+        {
+          if(duplicates(p, i) <= 0)
+            i.setSolution('W', p);
+        }
          
-         p.runOneTime = false;
+        if(p.prevBoardEqual())
+        {
+          for(i <- p.getUnsolvedSquares())
+          {
+            if(whiteIsolationCheck(p, i))
+            {
+              //println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
+              i.setSolution('W', p);
+            }
+          }
+          if(p.prevBoardEqual())
+          {
+            for(i <- p.getUnsolvedSquares())
+            {
+              println("Brute force initiate");
+              bruteForceBuild(p, 0, false);
+            }
+          }
+        }
          
-         p.prevBoard = p.unsolvedSquares;
+        if(p.getUnsolvedSquares().isEmpty)
+          p.solved = true;
          
-         //c += 1;
+        p.prevBoard = p.unsolvedSquares;
+        p.runOneTime = false;
+         
+        //c += 1;
       }
     }
     
@@ -221,6 +230,8 @@ object HitoriSolver
             bruteForceBuild(p, (n+1), !changeColour);
           else
             bruteForceBuild(p, n, !changeColour);
+          
+          return;
         }
         for(i <- p.getUnsolvedSquares())
         {
@@ -268,14 +279,20 @@ object HitoriSolver
       for(i <- p.getSquareList().filter(_.sol == 'B'))
       {
         if(getAdjacentSquares(p, i).exists(_.sol == 'B'))
+        {
+          println("Adjacent black squares at (" + (i.x+1) + ", " + (i.y+1) + ")");
           valid = false;
+        }
       }
       
       //Check if any sections of white are isolated
       for(i <- p.getSquareList())
       {
         if(whiteIsolationCheck(p, i))
+        {
+          println("White isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
           valid = false;
+        }
       }
       
       return valid;
@@ -343,14 +360,7 @@ object HitoriSolver
       
       def setAdjSqrList(str:String) =
         {
-          var adjSqr = str match
-          {
-            case ("above") => getAdjacentSquare(p, s, "above");
-            case ("left") => getAdjacentSquare(p, s, "left");
-            case ("right") => getAdjacentSquare(p, s, "right");
-            case ("below") => getAdjacentSquare(p, s, "below");
-          }
-          adjacentSquares = adjacentSquares :+ adjSqr;
+          adjacentSquares = adjacentSquares :+ getAdjacentSquare(p, s, str);
         }
       return adjacentSquares;
     }
