@@ -214,8 +214,12 @@ object HitoriSolver
       var cachedPrevBoard = p.prevBoard;
       var checkPercentage = 0;
       var checks = 0;
+      val remainingSquaresCombinations = ((Math.pow(2, p.getUnsolvedSquares().length))-1).toInt
+      val remainingSquaresCombinationsPercent = remainingSquaresCombinations/100.toInt;
       
-      for(i <- 0 to ((Math.pow(2, p.getUnsolvedSquares().length))-1).toInt)
+      println("Percentage of possible combinations checked:");
+      
+      for(i <- 0 to remainingSquaresCombinations)
       {
         var colorList = Array[Char]();
         val binary = Integer.toBinaryString(i);
@@ -243,6 +247,7 @@ object HitoriSolver
         }
         if(valid(p))
         {
+          println("Solution found after checking " + (checks+1) + " combinations!");
           p.solved = true;
           return;
         }
@@ -250,7 +255,7 @@ object HitoriSolver
           resetToCached();
         
         checks += 1;
-        if(checks % (((Math.pow(2, p.getUnsolvedSquares().length))-1)/100).toInt == 0)
+        if(checks % remainingSquaresCombinationsPercent == 0)
         {
           checkPercentage += 1;
           println(checkPercentage + "%");
@@ -266,7 +271,7 @@ object HitoriSolver
     }
     
     def valid(p:Puzzle):Boolean =
-    { 
+    {
       //Check if any white square has another white square with same value on same row/column
       for(i <- p.getSquareList().filter(_.sol == 'W'))
       {
@@ -281,7 +286,7 @@ object HitoriSolver
       {
         if(getAdjacentSquares(p, i).exists(_.sol == 'B'))
         {
-          println("Adjacent black squares at (" + (i.x+1) + ", " + (i.y+1) + ")");
+          //println("Adjacent black squares at (" + (i.x+1) + ", " + (i.y+1) + ")");
           return false;
         }
       }
@@ -291,7 +296,7 @@ object HitoriSolver
       {
         if(whiteIsolationCheck(p, i))
         {
-          println("White isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
+          //println("White isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
           return false;
         }
       }
@@ -442,7 +447,10 @@ object HitoriSolver
           s.setSolution('B', p, surroundBlack);
         }
       }
-      return duplicatesInRow.length;
+      if(!bruteForce)
+        return duplicatesInRow.length;
+      else
+        return duplicatesInRow.filter(_.getSolution() != 'B').length;
     }
     
     def duplicatesCol(p:Puzzle, s:Square, bruteForce:Boolean = false):Int =
@@ -456,7 +464,10 @@ object HitoriSolver
           s.setSolution('B', p, surroundBlack);
         }
       }
-      return duplicatesInCol.length;
+      if(!bruteForce)
+        return duplicatesInCol.length;
+      else
+        return duplicatesInCol.filter(_.getSolution() != 'B').length;
     }
     
     def twoPlusOnePattern(p:Puzzle, s:Square, l:List[Square]) =
@@ -492,9 +503,11 @@ object HitoriSolver
     
     def whiteIsolationCheck(p:Puzzle, s:Square):Boolean =
     {
+      if(s.getSolution() == 'W')
+        return false;
+      
       var allWhiteAndUnsolved = 0;
       var checkedIndexes = List[Int](s.i);
-      val startSquare = s;
       
       def setCheckedIndexes(s:Square) =
       {
@@ -513,7 +526,6 @@ object HitoriSolver
       
       def countSection(p:Puzzle, s:Square, startSquare:Square):Int =
       {
-        
         if(!getCheckedIndexes().contains(s.i) && s.getSolution() != 'B')
         {
           setCheckedIndexes(s);
@@ -531,7 +543,7 @@ object HitoriSolver
         }
         return getCheckedIndexes().length;
       }
-      return (allWhiteAndUnsolved != countSection(p, getAdjacentSquares(p, s)(0), startSquare));
+      return (allWhiteAndUnsolved != countSection(p, getAdjacentSquares(p, s)(0), s));
     }
     
     
