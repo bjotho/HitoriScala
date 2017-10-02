@@ -508,6 +508,7 @@ object HitoriSolver
       
       var allWhiteAndUnsolved = 0;
       var checkedIndexes = List[Int](s.i);
+      var section = 0;
       
       def setCheckedIndexes(s:Square) =
       {
@@ -524,10 +525,13 @@ object HitoriSolver
       }
       //println("allWhiteAndUnsolved = " + allWhiteAndUnsolved);
       
-      def countSection(p:Puzzle, s:Square, startSquare:Square):Int =
+      countSection(p, getAdjacentSquares(p, s)(0), s);
+      
+      def countSection(p:Puzzle, s:Square, startSquare:Square):Unit =
       {
         if(!getCheckedIndexes().contains(s.i) && s.getSolution() != 'B')
         {
+          section += 1;
           setCheckedIndexes(s);
           /*
           println("checkedIndexes: ");
@@ -541,9 +545,8 @@ object HitoriSolver
             countSection(p, adj(i), startSquare);
           }
         }
-        return getCheckedIndexes().length;
       }
-      return (allWhiteAndUnsolved != countSection(p, getAdjacentSquares(p, s)(0), s));
+      return (allWhiteAndUnsolved != section);
     }
     
     
