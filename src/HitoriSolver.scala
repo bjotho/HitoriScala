@@ -196,6 +196,9 @@ object HitoriSolver
               bruteForce(p);
           }
         }
+        
+        p.prevBoard = p.unsolvedSquares;
+        p.runOneTime = false;
          
         if(p.getUnsolvedSquares().isEmpty)
           if(valid(p))
@@ -204,12 +207,10 @@ object HitoriSolver
           {
             p.resetUnsolvedSquares(p.getSquareList());
             p.prevBoard = List[Square]();
+            p.runOneTime = true;
             println("Wrong solution. Trying again");
           }
         
-        p.prevBoard = p.unsolvedSquares;
-        p.runOneTime = false;
-         
         //c += 1;
       }
     }
@@ -224,7 +225,7 @@ object HitoriSolver
       val remainingSquaresCombinations = ((Math.pow(2, p.getUnsolvedSquares().length))-1).toInt
       val remainingSquaresCombinationsPercent = remainingSquaresCombinations/100.toInt;
       
-      println("Percentage of possible combinations checked:");
+      println("squares to solve: " + p.getUnsolvedSquares().length);
       
       for(i <- 0 to remainingSquaresCombinations)
       {
@@ -515,7 +516,6 @@ object HitoriSolver
       
       var allWhiteAndUnsolved = 0;
       var checkedIndexes = List[Int](s.i);
-      var section = 0;
       
       def setCheckedIndexes(s:Square) =
       {
@@ -532,13 +532,10 @@ object HitoriSolver
       }
       //println("allWhiteAndUnsolved = " + allWhiteAndUnsolved);
       
-      countSection(p, getAdjacentSquares(p, s)(0), s);
-      
-      def countSection(p:Puzzle, s:Square, startSquare:Square):Unit =
+      def countSection(p:Puzzle, s:Square, startSquare:Square):Int =
       {
         if(!getCheckedIndexes().contains(s.i) && s.getSolution() != 'B')
         {
-          section += 1;
           setCheckedIndexes(s);
           /*
           println("checkedIndexes: ");
@@ -552,8 +549,9 @@ object HitoriSolver
             countSection(p, adj(i), startSquare);
           }
         }
+        return getCheckedIndexes().length-1;
       }
-      return (allWhiteAndUnsolved != section);
+      return (allWhiteAndUnsolved != countSection(p, getAdjacentSquares(p, s)(0), s));
     }
     
     
