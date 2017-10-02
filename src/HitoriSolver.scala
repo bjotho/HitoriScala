@@ -132,7 +132,7 @@ object HitoriSolver
       //val LIMIT = 20;
       while(/*c < LIMIT*/!p.solved)
       {    
-        if(p.runOneTime)
+        /*if(p.runOneTime)
         {
           for(i <- p.getUnsolvedSquares())
           {
@@ -177,11 +177,11 @@ object HitoriSolver
         {
           if(duplicates(p, i) <= 0)
             i.setSolution('W', p);
-        }
+        }*/
          
         if(p.prevBoardEqual())
         {
-          for(i <- p.getUnsolvedSquares())
+          /*for(i <- p.getUnsolvedSquares())
           {
             if(whiteIsolationCheck(p, i))
             {
@@ -190,13 +190,14 @@ object HitoriSolver
             }
           }
           if(p.prevBoardEqual())
-          {
+          {*/
             for(i <- p.getUnsolvedSquares())
             {
               println("Brute force initiate");
-              bruteForceBuild(p, 0, false);
+              //bruteForceBuild(p, 0, false);
+              bruteForce(p);
             }
-          }
+          //}
         }
          
         if(p.getUnsolvedSquares().isEmpty)
@@ -209,7 +210,41 @@ object HitoriSolver
       }
     }
     
-    def bruteForceBuild(p:Puzzle, n:Int, changeColour:Boolean):Unit =
+    def bruteForce(p:Puzzle) =
+    {
+      //implement plain brute force
+    }
+    
+    def valid(p:Puzzle):Boolean =
+    {
+      var tempSquareList = p.getSquareList();
+      var tempUnsolvedSquares = p.getUnsolvedSquares();
+      var valid = true;
+      
+      //Check if any black square has an adjacent black square
+      for(i <- p.getSquareList().filter(_.sol == 'B'))
+      {
+        if(getAdjacentSquares(p, i).exists(_.sol == 'B'))
+        {
+          println("Adjacent black squares at (" + (i.x+1) + ", " + (i.y+1) + ")");
+          valid = false;
+        }
+      }
+      
+      //Check if any sections of white are isolated
+      for(i <- p.getSquareList())
+      {
+        if(whiteIsolationCheck(p, i))
+        {
+          println("White isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
+          valid = false;
+        }
+      }
+      
+      return valid;
+    }
+    
+    /*def bruteForceBuild(p:Puzzle, n:Int, changeColour:Boolean):Unit =
     {
       var cachedBoard = p.getSquareList();
       var cachedUnsolved = p.getUnsolvedSquares();
@@ -267,36 +302,7 @@ object HitoriSolver
         p.resetUnsolvedSquares(cachedUnsolved);
         p.prevBoard = cachedPrevBoard;
       }
-    }
-    
-    def valid(p:Puzzle):Boolean =
-    {
-      var tempSquareList = p.getSquareList();
-      var tempUnsolvedSquares = p.getUnsolvedSquares();
-      var valid = true;
-      
-      //Check if any black square has an adjacent black square
-      for(i <- p.getSquareList().filter(_.sol == 'B'))
-      {
-        if(getAdjacentSquares(p, i).exists(_.sol == 'B'))
-        {
-          println("Adjacent black squares at (" + (i.x+1) + ", " + (i.y+1) + ")");
-          valid = false;
-        }
-      }
-      
-      //Check if any sections of white are isolated
-      for(i <- p.getSquareList())
-      {
-        if(whiteIsolationCheck(p, i))
-        {
-          println("White isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
-          valid = false;
-        }
-      }
-      
-      return valid;
-    }
+    }*/
     
     def checkBetweenSame(p:Puzzle, s:Square, horizontal:Boolean) =
     {
