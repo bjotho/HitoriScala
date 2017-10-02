@@ -132,7 +132,7 @@ object HitoriSolver
       //val LIMIT = 10;
       while(/*c < LIMIT*/!p.solved)
       {    
-        /*if(p.runOneTime)
+        if(p.runOneTime)
         {
           for(i <- p.getUnsolvedSquares())
           {
@@ -177,11 +177,11 @@ object HitoriSolver
         {
           if(duplicates(p, i) == 0)
             i.setSolution('W', p);
-        }*/
+        }
          
         if(p.prevBoardEqual())
         {
-          /*for(i <- p.getUnsolvedSquares())
+          for(i <- p.getUnsolvedSquares())
           {
             if(whiteIsolationCheck(p, i))
             {
@@ -190,16 +190,23 @@ object HitoriSolver
             }
           }
           if(p.prevBoardEqual())
-          {*/
+          {
               println("Brute force initiate");
               //bruteForceBuild(p, 0, false);
               bruteForce(p);
-          //}
+          }
         }
          
         if(p.getUnsolvedSquares().isEmpty)
-          p.solved = true;
-         
+          if(valid(p))
+            p.solved = true;
+          else
+          {
+            p.resetUnsolvedSquares(p.getSquareList());
+            p.prevBoard = List[Square]();
+            println("Wrong solution. Trying again");
+          }
+        
         p.prevBoard = p.unsolvedSquares;
         p.runOneTime = false;
          
