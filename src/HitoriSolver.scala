@@ -191,18 +191,17 @@ object HitoriSolver
               i.setSolution('W', p);
             }
           }
-          /*if(p.prevBoardEqual())
+          if(p.prevBoardEqual())
           {
             println("Brute force build initiate");
-            bruteForceBuild(p, 0, false);
-            */
+            testOneSquare(p, 0, false);
             
             if(p.prevBoardEqual())
             {
               println("Brute force initiate");
               bruteForce(p);
             }
-          //}
+          }
         }
         
         p.prevBoard = p.unsolvedSquares;
@@ -323,7 +322,7 @@ object HitoriSolver
       return true;
     }
     
-    def bruteForceBuild(p:Puzzle, n:Int, changeColour:Boolean):Unit =
+    def testOneSquare(p:Puzzle, n:Int, changeColour:Boolean):Unit =
     {
       var cachedBoard = p.getSquareList();
       var cachedUnsolved = p.getUnsolvedSquares();
@@ -343,9 +342,9 @@ object HitoriSolver
           if(n < p.getUnsolvedSquares().length-1)
           {
             if(changeColour)
-              bruteForceBuild(p, (n+1), !changeColour);
+              testOneSquare(p, (n+1), !changeColour);
             else
-              bruteForceBuild(p, n, !changeColour);
+              testOneSquare(p, n, !changeColour);
           }
           return;
         }
