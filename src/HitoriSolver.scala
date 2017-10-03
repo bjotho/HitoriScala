@@ -191,19 +191,24 @@ object HitoriSolver
               i.setSolution('W', p);
             }
           }
-          if(p.prevBoardEqual())
+          /*if(p.prevBoardEqual())
           {
+            println("Brute force build initiate");
+            bruteForceBuild(p, 0, false);
+            */
+            
+            if(p.prevBoardEqual())
+            {
               println("Brute force initiate");
-              //bruteForceBuild(p, 0, false);
-              //bruteForce(p);
-              p.solved = true;
-          }
+              bruteForce(p);
+            }
+          //}
         }
         
         p.prevBoard = p.unsolvedSquares;
         p.runOneTime = false;
         
-        println("Iterations: " + c);
+        //println("Iterations: " + c);
          
         if(p.getUnsolvedSquares().isEmpty)
         {
@@ -234,7 +239,7 @@ object HitoriSolver
       
       for(i <- 0 to remainingSquaresCombinations)
       {
-        var colorList = Array[Char]();
+        var colorList = Array[Char]('W', 'B');
         val binary = Integer.toBinaryString(i);
         var binaryString = binary.toString();
         
@@ -252,6 +257,7 @@ object HitoriSolver
           else
             colorList = colorList :+ 'B';
         }
+        
         var n = 0;
         for(j <- p.getUnsolvedSquares())
         {
@@ -317,7 +323,7 @@ object HitoriSolver
       return true;
     }
     
-    /*def bruteForceBuild(p:Puzzle, n:Int, changeColour:Boolean):Unit =
+    def bruteForceBuild(p:Puzzle, n:Int, changeColour:Boolean):Unit =
     {
       var cachedBoard = p.getSquareList();
       var cachedUnsolved = p.getUnsolvedSquares();
@@ -334,11 +340,13 @@ object HitoriSolver
         if(p.prevBoardEqual())
         {
           resetToCached();
-          if(changeColour)
-            bruteForceBuild(p, (n+1), !changeColour);
-          else
-            bruteForceBuild(p, n, !changeColour);
-          
+          if(n < p.getUnsolvedSquares().length-1)
+          {
+            if(changeColour)
+              bruteForceBuild(p, (n+1), !changeColour);
+            else
+              bruteForceBuild(p, n, !changeColour);
+          }
           return;
         }
         for(i <- p.getUnsolvedSquares())
@@ -375,7 +383,7 @@ object HitoriSolver
         p.resetUnsolvedSquares(cachedUnsolved);
         p.prevBoard = cachedPrevBoard;
       }
-    }*/
+    }
     
     def checkBetweenSame(p:Puzzle, s:Square, horizontal:Boolean) =
     {
@@ -521,7 +529,6 @@ object HitoriSolver
       
       var allWhiteAndUnsolved = 0;
       var checkedIndexes = List[Int](s.i);
-      var section = 0;
       
       def setCheckedIndexes(s:Square) =
       {
@@ -544,22 +551,20 @@ object HitoriSolver
         if(!getCheckedIndexes().contains(s.i) && s.getSolution() != 'B')
         {
           setCheckedIndexes(s);
-          section += 1;
           
           var adj = getAdjacentSquares(p, s).filter(_.i != startSquare.i).filter(_.getSolution() != 'B');
           
-          if(startSquare.i == 14)
+          /*
+          print("checkedIndexes: [");
+          for(i <- 0 to (getCheckedIndexes().length-1))
           {
-            print("checkedIndexes: [ ");
-            for(i <- 0 to (getCheckedIndexes().length-1))
-            {
-              if(i != (getCheckedIndexes.length-1))
-                print(getCheckedIndexes()(i) + ", ");
-              else
-                print(getCheckedIndexes()(i));
-            }
-            print("]\n");
+            if(i != (getCheckedIndexes.length-1))
+              print(getCheckedIndexes()(i) + ", ");
+            else
+              print(getCheckedIndexes()(i));
           }
+          print("]\n");
+          */
           
           for(i <- 0 to adj.length-1)
           {
@@ -567,10 +572,7 @@ object HitoriSolver
           }
         }
       }
-      if(s.i == 14)
-        println("allWhiteAndUnsolved = " + allWhiteAndUnsolved + ", section = " + section + ", getCheckedIndexes().length = " + getCheckedIndexes().length);
-      return (allWhiteAndUnsolved != section);
-      //Har prøvd å returnere getCheckedIndexes.length og section, men begge blir feil
+     return (allWhiteAndUnsolved > getCheckedIndexes().length);
     }
     
     
