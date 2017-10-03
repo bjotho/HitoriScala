@@ -128,10 +128,12 @@ object HitoriSolver
     def iterate(p:Puzzle) =
     {
       //Loop iterating until the board is solved (when all squares have received a color)
-      //var c = 0;
+      var c = 0;
       //val LIMIT = 10;
       while(/*c < LIMIT*/!p.solved)
-      {    
+      {
+        c += 1;
+        
         if(p.runOneTime)
         {
           for(i <- p.getUnsolvedSquares())
@@ -185,7 +187,7 @@ object HitoriSolver
           {
             if(whiteIsolationCheck(p, i))
             {
-              //println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
+              println("Isolation if (" + (i.x+1) + ", " + (i.y+1) + ") is black");
               i.setSolution('W', p);
             }
           }
@@ -193,14 +195,18 @@ object HitoriSolver
           {
               println("Brute force initiate");
               //bruteForceBuild(p, 0, false);
-              bruteForce(p);
+              //bruteForce(p);
+              p.solved = true;
           }
         }
         
         p.prevBoard = p.unsolvedSquares;
         p.runOneTime = false;
+        
+        println("Iterations: " + c);
          
         if(p.getUnsolvedSquares().isEmpty)
+        {
           if(valid(p))
             p.solved = true;
           else
@@ -210,8 +216,7 @@ object HitoriSolver
             p.runOneTime = true;
             println("Wrong solution. Trying again");
           }
-        
-        //c += 1;
+        }
       }
     }
     
@@ -516,6 +521,7 @@ object HitoriSolver
       
       var allWhiteAndUnsolved = 0;
       var checkedIndexes = List[Int](s.i);
+      var section = 0;
       
       def setCheckedIndexes(s:Square) =
       {
@@ -530,28 +536,41 @@ object HitoriSolver
           allWhiteAndUnsolved += 1;
         }
       }
-      //println("allWhiteAndUnsolved = " + allWhiteAndUnsolved);
       
-      def countSection(p:Puzzle, s:Square, startSquare:Square):Int =
+      countSection(p, getAdjacentSquares(p, s).filter(_.getSolution() != 'B')(0), s)
+      
+      def countSection(p:Puzzle, s:Square, startSquare:Square):Unit =
       {
         if(!getCheckedIndexes().contains(s.i) && s.getSolution() != 'B')
         {
           setCheckedIndexes(s);
-          /*
-          println("checkedIndexes: ");
-          getCheckedIndexes().foreach(print);
-          print("\n");
-          */
-          var adj = getAdjacentSquares(p, s).filter(_.i != startSquare.i);
+          section += 1;
+          
+          var adj = getAdjacentSquares(p, s).filter(_.i != startSquare.i).filter(_.getSolution() != 'B');
+          
+          if(startSquare.i == 14)
+          {
+            print("checkedIndexes: [ ");
+            for(i <- 0 to (getCheckedIndexes().length-1))
+            {
+              if(i != (getCheckedIndexes.length-1))
+                print(getCheckedIndexes()(i) + ", ");
+              else
+                print(getCheckedIndexes()(i));
+            }
+            print("]\n");
+          }
           
           for(i <- 0 to adj.length-1)
           {
             countSection(p, adj(i), startSquare);
           }
         }
-        return getCheckedIndexes().length-1;
       }
-      return (allWhiteAndUnsolved != countSection(p, getAdjacentSquares(p, s)(0), s));
+      if(s.i == 14)
+        println("allWhiteAndUnsolved = " + allWhiteAndUnsolved + ", section = " + section + ", getCheckedIndexes().length = " + getCheckedIndexes().length);
+      return (allWhiteAndUnsolved != section);
+      //Har prøvd å returnere getCheckedIndexes.length og section, men begge blir feil
     }
     
     
