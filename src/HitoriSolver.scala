@@ -56,6 +56,7 @@ object HitoriSolver
     var unsolvedSquares = List[Square]();
     var prevBoard = List[Square]();
     var runOneTime = true;
+    var guessedValid = false;
     var solved = false;
     
     def prevBoardEqual():Boolean = (prevBoard.length == unsolvedSquares.length);
@@ -129,8 +130,8 @@ object HitoriSolver
     {
       //Loop iterating until the board is solved (when all squares have received a color)
       var c = 0;
-      //val LIMIT = 10;
-      while(/*c < LIMIT*/!p.solved)
+      val LIMIT = 10;
+      while(c < LIMIT/*!p.solved*/)
       {
         c += 1;
         
@@ -193,8 +194,24 @@ object HitoriSolver
           }
           if(p.prevBoardEqual())
           {
-            println("Brute force build initiate");
-            testOneSquare(p, 0, false);
+            println("p.getUnsolvedSquares().length before = " + p.getUnsolvedSquares().length);
+            p.guessedValid = false;
+            colorSwitch(false);
+            if(!p.guessedValid)
+              colorSwitch(true);
+            def colorSwitch(changeColor:Boolean):Unit =
+            {
+              for(i <- p.getUnsolvedSquares())
+              {
+                breakable
+                {
+                  testOneSquare(p, i, changeColor);
+                  if(p.guessedValid)
+                    return;
+                }
+              }
+            }
+            println("p.getUnsolvedSquares().length after = " + p.getUnsolvedSquares().length);
             
             if(p.prevBoardEqual())
             {
@@ -322,7 +339,7 @@ object HitoriSolver
       return true;
     }
     
-    def testOneSquare(p:Puzzle, n:Int, changeColour:Boolean):Unit =
+    def testOneSquare(p:Puzzle, s:Square, changeColour:Boolean):Unit =
     {
       var cachedBoard = p.getSquareList();
       var cachedUnsolved = p.getUnsolvedSquares();
@@ -330,50 +347,51 @@ object HitoriSolver
       p.prevBoard = List[Square]();
       
       if(!changeColour)
-        p.getUnsolvedSquares()(n).setSolution('B', p, surroundBlack);
+        s.setSolution('B', p, surroundBlack);
       else
-        p.getUnsolvedSquares()(n).setSolution('W', p);
+        s.setSolution('W', p);
       
       while(!p.solved && valid(p))
       {
-        if(p.prevBoardEqual())
-        {
-          resetToCached();
-          if(n < p.getUnsolvedSquares().length-1)
-          {
-            if(changeColour)
-              testOneSquare(p, (n+1), !changeColour);
-            else
-              testOneSquare(p, n, !changeColour);
-          }
-          return;
-        }
         for(i <- p.getUnsolvedSquares())
         {
           if(duplicates(p, i) <= 0)
             i.setSolution('W', p);
-       
-          if(p.getUnsolvedSquares().isEmpty)
-            p.solved = true;
-          
-          if(!valid(p))
-          {
-            break;
-          }
         }
+        
+        if(p.prevBoardEqual())
+        {
+          resetToCached();
+          return;
+        }
+        
         if(p.getUnsolvedSquares().isEmpty)
            p.solved = true;
         
+        if(!valid(p))
+        {
+          break;
+        }
         p.prevBoard = p.unsolvedSquares;
       }
       
       if(!valid(p))
       {
+        //println("solution found for square (" + (s.x+1) + ", " + (s.y+1) + ")");
         resetToCached();
-        if(changeColour)
-          p.getUnsolvedSquares()(n).setSolution('B', p, surroundBlack);
+        if(!changeColour)
+        {
+          println("Setting square (" + (s.x+1) + ", " + (s.y+1) + ") to black");
+          s.setSolution('B', p, surroundBlack);
+        }
         else
-          p.getUnsolvedSquares()(n).setSolution('W', p);
+        {
+          println("Setting square (" + (s.x+1) + ", " + (s.y+1) + ") to black");
+          s.setSolution('W', p);
+        }
+        
+        p.guessedValid = true;
+        println("p.getUnsolvedSquares().length after success in testOneSquare = " + p.getUnsolvedSquares().length);
       }
       
       def resetToCached() =
@@ -516,7 +534,7 @@ object HitoriSolver
       
       for(i <- adj)
       {
-        if(!i.getSolved())
+        //if(!i.getSolved())
           i.setSolution('W', p);
       }
     }
