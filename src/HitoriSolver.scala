@@ -239,7 +239,7 @@ object HitoriSolver
       
       for(i <- 0 to remainingSquaresCombinations)
       {
-        var colorList = Array[Char]('W', 'B');
+        var colorList = Array[Char]();
         val binary = Integer.toBinaryString(i);
         var binaryString = binary.toString();
         
